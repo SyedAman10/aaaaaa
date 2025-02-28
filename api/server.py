@@ -9,14 +9,13 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})  # Allow all origins
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# Endpoint to get Salesforce access token
-@app.route('/auth/salesforce', methods=['POST'])
+@app.route('/api/auth/salesforce', methods=['POST'])
 def get_salesforce_token():
     try:
         data = {
@@ -32,7 +31,6 @@ def get_salesforce_token():
     except requests.exceptions.RequestException as e:
         return jsonify({'error': str(e)}), 400
 
-# File upload endpoint
 @app.route('/api/upload', methods=['POST'])
 def upload_file():
     try:
@@ -50,8 +48,7 @@ def upload_file():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# Convert Lead to Opportunity
-@app.route('/convert-lead', methods=['POST'])
+@app.route('/api/convert-lead', methods=['POST'])
 def convert_lead():
     try:
         data = request.json
@@ -85,31 +82,6 @@ def convert_lead():
     except requests.exceptions.RequestException as e:
         return jsonify({'error': str(e)}), 400
 
-# Test Lead Conversion
-@app.route('/test-convert', methods=['POST'])
-def test_convert():
-    try:
-        lead_id = "00QAu00000OcdnJMAR"
-        access_token = "your_access_token_here"
-        instance_url = "https://erptechnicals--fulrdpbx.sandbox.my.salesforce.com"
-        converted_status = "Qualification"
-
-        response = requests.post(
-            "http://localhost:5000/convert-lead",
-            json={
-                'leadId': lead_id,
-                'accessToken': access_token,
-                'instanceUrl': instance_url,
-                'StageName': converted_status,
-                'opportunityName': "Test Opportunity",
-                'doNotCreateOpportunity': False,
-                'accountId': None,
-                'contactId': None,
-            }
-        )
-        return jsonify(response.json())
-    except requests.exceptions.RequestException as e:
-        return jsonify({'error': str(e)}), 500
-
-if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+# Export Flask app for Vercel
+def handler(event, context):
+    return app(event, context)
